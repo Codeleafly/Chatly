@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatly - Real-time Chat</title>
+  <link href="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" rel="stylesheet" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #login, #chatInterface {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      box-sizing: border-box;
+    }
+
+    h2, h3 {
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background-color: #4a90e2;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 0.5rem;
+    }
+
+    button:hover {
+      background-color: #357ab7;
+    }
+
+    #chatBox {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: auto;
+      margin: 1rem 0;
+      padding: 0.5rem;
+      background: #fdfdfd;
+    }
+
+    #chatBox div {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: #e9f0ff;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2><i data-lucide="log-in"></i> Enter Your Unique ID</h2>
+    <input type="text" id="userIdInput" placeholder="e.g., user123" />
+    <button onclick="registerUser()"><i data-lucide="arrow-right-circle"></i> Start Chat</button>
+  </div>
+
+  <div id="chatInterface" style="display:none;">
+    <h3><i data-lucide="user"></i> Your ID: <span id="myId"></span></h3>
+    <input type="text" id="chatWith" placeholder="Enter user ID to chat with" />
+    <div id="chatBox"></div>
+    <input type="text" id="messageInput" placeholder="Type a message" />
+    <button onclick="sendMessage()"><i data-lucide="send"></i> Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let myId = "";
+
+    function registerUser() {
+      myId = document.getElementById('userIdInput').value.trim();
+      if (myId) {
+        socket.emit('register', myId);
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('chatInterface').style.display = 'block';
+        document.getElementById('myId').textContent = myId;
+      }
+    }
+
+    function sendMessage() {
+      const to = document.getElementById('chatWith').value.trim();
+      const message = document.getElementById('messageInput').value.trim();
+      if (to && message) {
+        socket.emit('send-message', { to, message, from: myId });
+        appendMessage(`You: ${message}`);
+        document.getElementById('messageInput').value = '';
+      }
+    }
+
+    function appendMessage(msg) {
+      const box = document.getElementById('chatBox');
+      box.innerHTML += `<div>${msg}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    socket.on('receive-message', ({ message, from }) => {
+      appendMessage(`${from}: ${message}`);
+    });
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+  </html>
